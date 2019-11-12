@@ -556,6 +556,7 @@ class Simulator(gym.Env):
             trim = 0 + self.randomization_settings['trim'][0]
             p = get_DB18_uncalibrated(delay=0.15, trim=trim)
         else:
+            trim = 0
             p = get_DB18_nominal(delay=0.15)
 
         q = self.cartesian_from_weird(self.cur_pos, self.cur_angle)
@@ -569,7 +570,7 @@ class Simulator(gym.Env):
         obs = self.render_obs()
 
         # Return first observation
-        return obs
+        return obs, trim
 
     def _load_map(self, map_name):
         """
