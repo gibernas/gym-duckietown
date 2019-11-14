@@ -19,7 +19,7 @@
     "trim": {
         "type": "normal",
         "loc": 0,
-        "scale": 0.02
+        "scale": 0.03
     },
     "camera_height": {
         "type": "uniform",
