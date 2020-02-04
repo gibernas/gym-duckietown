@@ -74,7 +74,7 @@ def _train(args):
                     print("rewards at time {}: {}".format(total_timesteps, evaluations[-1]))
 
                     if args.save_models:
-                        policy.save(file_name='ddpg', directory=args.model_dir)
+                        policy.save(filename='ddpg', directory=args.model_dir)
                     np.savez("./results/rewards.npz",evaluations)
 
             # Reset environment

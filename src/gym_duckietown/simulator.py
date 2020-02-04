@@ -53,7 +53,7 @@ WALL_COLOR = np.array([0.64, 0.71, 0.28])
 GROUND_COLOR = np.array([0.15, 0.15, 0.15])
 
 # Angle at which the camera is pitched downwards
-CAMERA_ANGLE = 19.15
+CAMERA_ANGLE = 15
 
 # Camera field of view angle in the Y direction
 # Note: robot uses Raspberri Pi camera module V1.3
@@ -1427,7 +1427,7 @@ class Simulator(gym.Env):
             done_code = 'max-steps-reached'
         else:
             done = False
-            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.robot_speed)
+            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.speed)
             msg = ''
             done_code = 'in-progress'
         return DoneRewardInfo(done=done, done_why=msg, reward=reward, done_code=done_code)
