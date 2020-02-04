@@ -1325,7 +1325,7 @@ class Simulator(gym.Env):
                 lp = self.get_lane_pos2(pos, angle)
                 info['lane_position'] = lp.as_json_dict()
                 lp_ideal = self.get_lane_pos2(ideal_pos, ideal_angle)
-                info['ideal_lane_position'] = lp.as_json_dict()
+                info['ideal_lane_position'] = lp_ideal.as_json_dict()
             except NotInLane:
                 pass
 
