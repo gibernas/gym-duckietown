@@ -548,6 +548,8 @@ class Simulator(gym.Env):
 
         self.cur_pos = propose_pos
         self.cur_angle = propose_angle
+        self.ideal_pose = propose_pos
+        self.cur_angle = propose_angle
 
         init_vel = np.array([0, 0])
 
@@ -555,13 +557,16 @@ class Simulator(gym.Env):
         if self.dynamics_rand:
             trim = 0 + self.randomization_settings['trim'][0]
             p = get_DB18_uncalibrated(delay=0.15, trim=trim)
+            p_ideal = get_DB18_nominal(delay=0.15)
         else:
             p = get_DB18_nominal(delay=0.15)
+            trim = 0
 
         q = self.cartesian_from_weird(self.cur_pos, self.cur_angle)
         v0 = geometry.se2_from_linear_angular(init_vel, 0)
         c0 = q, v0
         self.state = p.initialize(c0=c0, t0=0)
+        self.ideal_state = p_ideal.initialize(c0=c0, t0=0)
 
         logger.info('Starting at %s %s' % (self.cur_pos, self.cur_angle))
 
@@ -569,7 +574,7 @@ class Simulator(gym.Env):
         obs = self.render_obs()
 
         # Return first observation
-        return obs
+        return obs, trim
 
     def _load_map(self, map_name):
         """
@@ -1270,7 +1275,8 @@ class Simulator(gym.Env):
         prev_pos = self.cur_pos
 
         # Update the robot's position
-        self.cur_pos, self.cur_angle = _update_pos(self, action)
+        self.cur_pos, self.cur_angle, self.ideal_pos, self.ideal_angle = _update_pos(self, action)
+
 
         self.step_count += 1
         self.timestamp += delta_time
@@ -1298,6 +1304,9 @@ class Simulator(gym.Env):
         info = {}
         pos = self.cur_pos
         angle = self.cur_angle
+        ideal_pos = self.ideal_pos
+        ideal_angle = self.ideal_angle
+
         # Get the position relative to the right lane tangent
 
         info['action'] = list(self.last_action)
@@ -1320,7 +1329,9 @@ class Simulator(gym.Env):
             info['robot_speed'] = self.speed
             info['proximity_penalty'] = self.proximity_penalty2(pos, angle)
             info['cur_pos'] = [float(pos[0]), float(pos[1]), float(pos[2])]
+            info['ideal_pos'] = [float(ideal_pos[0]), float(ideal_pos[1]), float(ideal_pos[2])]
             info['cur_angle'] = float(angle)
+            info['ideal_angle'] = float(ideal_angle)
             info['wheel_velocities'] = [self.wheelVels[0], self.wheelVels[1]]
 
             # put in cartesian coordinates
@@ -1763,10 +1774,17 @@ def _update_pos(self, action):
 
     action = DynamicsInfo(motor_left=action[0], motor_right=action[1])
     self.state = self.state.integrate(self.delta_time, action)
+    self.ideal_state = self.ideal_state.integrate(self.delta_time, action)
     q = self.state.TSE2_from_state()[0]
+    q_ideal = self.ideal_state.TSE2_from_state()[0]
     pos, angle = self.weird_from_cartesian(q)
+    pos_ideal, angle_ideal = self.weird_from_cartesian(q_ideal)
     pos = np.asarray(pos)
-    return pos, angle
+    pos_ideal = np.asarray(pos_ideal)
+
+    # Reset the ideal pose to be at the same condition as the real one
+    self.ideal_state = self.state
+    return pos, angle, pos_ideal, angle_ideal
 
 
 def _actual_center(pos, angle):
