@@ -89,6 +89,31 @@ class SteeringToWheelVelWrapper(gym.ActionWrapper):
         vels = np.array([u_l_limited, u_r_limited])
         return vels
 
+    def inverse(self, action):
+        u_l, u_r = action
+
+        # Distance between the wheels
+        baseline = self.unwrapped.wheel_dist
+
+        # assuming same motor constants k for both motors
+        k_r = self.k
+        k_l = self.k
+
+        # adjusting k by gain and trim
+        k_r_inv = (self.gain + self.trim) / k_r
+        k_l_inv = (self.gain - self.trim) / k_l
+
+        # Convert to motor rotation
+        omega_l = u_l / k_l_inv
+        omega_r = u_l / k_r_inv
+
+        # Compute linear and angular velocites
+        v = (self.radius / 2) * (omega_l + omega_r)
+        angle = (omega_l - omega_r) * (self.radius/self.baseline)
+
+        return v, angle
+
+
 class PyTorchObsWrapper(gym.ObservationWrapper):
     """
     Transpose the observation image tensors for PyTorch
