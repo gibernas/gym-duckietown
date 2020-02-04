@@ -1324,13 +1324,14 @@ class Simulator(gym.Env):
             try:
                 lp = self.get_lane_pos2(pos, angle)
                 info['lane_position'] = lp.as_json_dict()
+                lp_ideal = self.get_lane_pos2(ideal_pos, ideal_angle)
+                info['ideal_lane_position'] = lp.as_json_dict()
             except NotInLane:
                 pass
 
             info['robot_speed'] = self.speed
             info['proximity_penalty'] = self.proximity_penalty2(pos, angle)
             info['cur_pos'] = [float(pos[0]), float(pos[1]), float(pos[2])]
-            info['ideal_pos'] = [float(ideal_pos[0]), float(ideal_pos[1]), float(ideal_pos[2])]
             info['cur_angle'] = float(angle)
             info['ideal_angle'] = float(ideal_angle)
             info['wheel_velocities'] = [self.wheelVels[0], self.wheelVels[1]]
@@ -1783,8 +1784,11 @@ def _update_pos(self, action):
     pos = np.asarray(pos)
     pos_ideal = np.asarray(pos_ideal)
 
-    # Reset the ideal pose to be at the same condition as the real one
-    self.ideal_state = self.state
+    # Reset the ideal pose to be at the same condition as the real one, this is inelegant, look for a way to change state
+    p_ideal = get_DB18_nominal(delay=0.15)
+    current_SE2_config = self.state.TSE2_from_state()
+    self.ideal_state = p_ideal.initialize(c0=current_SE2_config, t0=0)
+
     return pos, angle, pos_ideal, angle_ideal
 
 
