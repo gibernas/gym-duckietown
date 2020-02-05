@@ -1338,8 +1338,8 @@ class Simulator(gym.Env):
 
             # put in cartesian coordinates
             # (0,0 is bottom left)
-            # q = self.cartesian_from_weird(self.cur_pos, self.)
-            # info['cur_pos_cartesian'] = [float(p[0]), float(p[1])]
+            q = self.cartesian_from_weird(self.cur_pos, self.cur_angle)
+            info['cur_pos_SE2'] = q
             # info['egovehicle_pose_cartesian'] = {'~SE2Transform': {'p': [float(p[0]), float(p[1])],
             #                                                        'theta': angle}}
 
