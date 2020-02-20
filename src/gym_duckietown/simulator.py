@@ -790,12 +790,15 @@ class Simulator(gym.Env):
             return None
         return self.grid[j * self.grid_width + i]
 
-    def _perturb(self, val, scale=0.1):
+    def _perturb(self, val, scale=0.1, other_rng=None):
         """
-        Add noise to a value. This is used for domain randomization.
+        Add noise to a value. This is used for domain randomization. By default uses the rng used in the whole
+        simulation, pass another one to avoid affecting the random state.
         """
         assert scale >= 0
         assert scale < 1
+
+        rng = other_rng if other_rng else self.np_random
 
         if isinstance(val, list):
             val = np.array(val)
@@ -804,9 +807,9 @@ class Simulator(gym.Env):
             return val
 
         if isinstance(val, np.ndarray):
-            noise = self.np_random.uniform(low=1 - scale, high=1 + scale, size=val.shape)
+            noise = rng.uniform(low=1 - scale, high=1 + scale, size=val.shape)
         else:
-            noise = self.np_random.uniform(low=1 - scale, high=1 + scale)
+            noise = rng.uniform(low=1 - scale, high=1 + scale)
 
         return val * noise
 
@@ -1478,7 +1481,7 @@ class Simulator(gym.Env):
             gl.glRotatef(self.cam_angle[0], 1, 0, 0)
             gl.glRotatef(self.cam_angle[1], 0, 1, 0)
             gl.glRotatef(self.cam_angle[2], 0, 0, 1)
-            gl.glTranslatef(0, 0, CAMERA_FORWARD_DIST)
+            gl.glTranslatef(0, 0, self._perturb(CAMERA_FORWARD_DIST, other_rng=np.random))
 
         if top_down:
             gl.gluLookAt(
